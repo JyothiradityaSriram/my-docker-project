@@ -1,32 +1,32 @@
 pipeline:
   agent:
-    label: "docker"   # any node with Docker installed
+    label: "docker"
 
   environment:
-    DOCKER_IMAGE: "yourdockerhubusername/yourimagename"
+    DOCKER_IMAGE: "sriramhukum/mytestapp"
     TAG: "latest"
 
   stages:
-    - stage: Checkout
+    - stage: "Checkout"
       steps:
-        - checkout: git
+        - checkout: "git"
 
-    - stage: Build Docker Image
+    - stage: "Build Docker Image"
       steps:
         - sh: |
             echo "Building Docker image..."
             docker build -t ${DOCKER_IMAGE}:${TAG} .
 
-    - stage: Login to DockerHub
+    - stage: "Login to DockerHub"
       steps:
         - withCredentials:
-            - id: "dockerhub-cred"   # Jenkins credential ID
-              usernameVariable: DOCKER_USER
-              passwordVariable: DOCKER_PASS
+            - id: "dockerhub-cred"
+              usernameVariable: "DOCKER_USER"
+              passwordVariable: "DOCKER_PASS"
         - sh: |
             echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
 
-    - stage: Push Docker Image
+    - stage: "Push Docker Image"
       steps:
         - sh: |
             echo "Pushing Docker image..."
@@ -34,5 +34,6 @@ pipeline:
 
   post:
     always:
-      - sh: docker logout
-
+      - sh: |
+          echo "Cleaning up..."
+          docker logout
