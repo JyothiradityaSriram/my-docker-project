@@ -3,37 +3,37 @@ pipeline:
     label: "docker"
 
   environment:
-    DOCKER_IMAGE: "sriramhukum/mytestapp"
+    REGISTRY: "docker.io"
+    IMAGE_NAME: "sriramhukum/mytestapp"
     TAG: "latest"
 
   stages:
-    - stage: "Checkout"
+    - stage: Checkout
       steps:
-        - checkout: "git"
+        - git:
+            url: "https://github.com/JyothiradityaSriram/my-docker-project"
+            branch: "main"
 
-    - stage: "Build Docker Image"
+    - stage: Build Docker Image
       steps:
         - sh: |
-            echo "Building Docker image..."
-            docker build -t ${DOCKER_IMAGE}:${TAG} .
+            docker build -t $IMAGE_NAME:$TAG .
 
-    - stage: "Login to DockerHub"
+    - stage: Login to DockerHub
       steps:
         - withCredentials:
-            - id: "dockerhub-cred"
-              usernameVariable: "DOCKER_USER"
-              passwordVariable: "DOCKER_PASS"
+            - usernamePassword:
+                credentialsId: "dockerhub-creds"
+                usernameVariable: DOCKER_USER
+                passwordVariable: DOCKER_PASS
         - sh: |
-            echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-    - stage: "Push Docker Image"
+    - stage: Push Image
       steps:
         - sh: |
-            echo "Pushing Docker image..."
-            docker push ${DOCKER_IMAGE}:${TAG}
+            docker push $IMAGE_NAME:$TAG
 
   post:
     always:
-      - sh: |
-          echo "Cleaning up..."
-          docker logout
+      - sh: echo "Pipeline Completed"
