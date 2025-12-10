@@ -9,15 +9,18 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo "Cloning repository..."
-                sh 'git clone https://github.com/JyothiradityaSriram/my-docker-project.git'
+                echo "Cleaning old workspace folder if exists..."
+                sh '''
+                    rm -rf my-docker-project
+                    git clone https://github.com/JyothiradityaSriram/my-docker-project.git
+                '''
             }
         }
 
         stage('Build') {
             steps {
                 echo "Building Docker image..."
-                sh 'docker build -t $IMAGE_NAME:$TAG .'
+                sh 'cd my-docker-project && docker build -t $IMAGE_NAME:$TAG .'
             }
         }
 
