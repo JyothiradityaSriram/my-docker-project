@@ -1,41 +1,40 @@
-pipeline:
-  agent:
-    any: true
+pipeline {
+    agent any
 
-  environment:
-    IMAGE_NAME: "sriramhukum/mytestapp"
-    TAG: "latest"
+    environment {
+        IMAGE_NAME = "sriramhukum/mytestapp"
+        TAG        = "latest"
+    }
 
-  stages:
-    - stage: Checkout
-      steps:
-        - sh: |
-            git clone https://github.com/JyothiradityaSriram/my-docker-project repo
-            cd repo
-            ls -la
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Cloning repository..."
+                sh 'git clone https://github.com/JyothiradityaSriram/my-docker-project.git'
+            }
+        }
 
-    - stage: Build Docker Image
-      steps:
-        - sh: |
-            cd repo
-            docker build -t $IMAGE_NAME:$TAG .
+        stage('Build') {
+            steps {
+                echo "Building Docker image..."
+                sh 'docker build -t $IMAGE_NAME:$TAG .'
+            }
+        }
 
-    - stage: Login to DockerHub
-      steps:
-        - sh: |
-            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-      environment:
-        DOCKER_USER: "${DOCKER_USER}"
-        DOCKER_PASS: "${DOCKER_PASS}"
-      credentials:
-        - dockerhub-creds
+        stage('Push') {
+            steps {
+                echo "Pushing Docker image to registry..."
+                sh 'docker push $IMAGE_NAME:$TAG'
+            }
+        }
+    }
 
-    - stage: Push Image
-      steps:
-        - sh: |
-            docker push $IMAGE_NAME:$TAG
-
-  post:
-    always:
-      - sh: |
-          echo "Pipeline Completed"
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check the logs."
+        }
+    }
+}
