@@ -1,39 +1,34 @@
 pipeline:
   agent:
-    label: "docker"
+    any: true
 
   environment:
-    REGISTRY: "docker.io"
     IMAGE_NAME: "sriramhukum/mytestapp"
     TAG: "latest"
 
   stages:
     - stage: Checkout
       steps:
-        - git:
-            url: "https://github.com/JyothiradityaSriram/my-docker-project"
-            branch: "main"
+        - sh: "git clone https://github.com/JyothiradityaSriram/my-docker-project repo"
+        - sh: "cd repo && ls -la"
 
     - stage: Build Docker Image
       steps:
-        - sh: |
-            docker build -t $IMAGE_NAME:$TAG .
+        - sh: "cd repo && docker build -t $IMAGE_NAME:$TAG ."
 
-    - stage: Login to DockerHub
+    - stage: Login
       steps:
         - withCredentials:
-            - usernamePassword:
-                credentialsId: "dockerhub-creds"
-                usernameVariable: DOCKER_USER
-                passwordVariable: DOCKER_PASS
-        - sh: |
-            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            - id: dockerhub-creds
+              type: usernamePassword
+              usernameVariable: DOCKER_USER
+              passwordVariable: DOCKER_PASS
+        - sh: "echo \"$DOCKER_PASS\" | docker login -u \"$DOCKER_USER\" --password-stdin"
 
     - stage: Push Image
       steps:
-        - sh: |
-            docker push $IMAGE_NAME:$TAG
+        - sh: "docker push $IMAGE_NAME:$TAG"
 
   post:
     always:
-      - sh: echo "Pipeline Completed"
+      - sh: "echo Pipeline Completed"
